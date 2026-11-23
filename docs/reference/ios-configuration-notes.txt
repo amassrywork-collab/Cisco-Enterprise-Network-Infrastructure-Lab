@@ -1,0 +1,372 @@
+Switching 
+
+Create Vlans
+
+en
+conf t
+vlan 10
+name IT
+vlan 20
+name HR
+vlan 30
+name Sales
+
+Assign ports to vlans
+
+int f0/20
+sw mode access
+sw acc vlan 10
+int f0/21
+sw mode access
+sw acc vlan 20
+int f0/22
+sw mode acc 
+sw acc vlan 30
+
+Assign port to Trunk Between switch & Router
+
+int g0/1
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+
+Create EtherChannel
+
+int range f0/1-2
+channel-group 1 mode active
+int 
+
+int port-channel 1
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+int range f0/3-4
+channel-group 2 mode active
+int 
+
+int port-channel 2
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+int range f0/5-6
+channel-group 3 mode active
+int 
+
+int port-channel 3
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+int range f0/1-2
+channel-group 1 mode desirable
+int 
+
+int port-channel 1
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+int range f0/3-4
+channel-group 2 mode desirable
+int 
+
+int port-channel 2
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+int range f0/5-6
+channel-group 3 mode desirable
+int 
+
+int port-channel 3
+sw mode trunk
+sw trunk all vlan 10,20,30
+
+
+Create STP
+
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1,10,20,30 priority 4096
+
+
+Create Port-security 
+
+
+int range f0/20-22
+sw port-sec
+sw port-sec max 1
+sw port-sec mac sticky
+sw port-sec violation restrict
+spanning-tree bpduguard enable
+spanning-tree portfast
+int f0/1
+sw port-sec
+sw port-sec max 2
+sw port-sec mac sticky
+sw port-sec violation restrict
+
+--------------------------------------------------------------------------------------------
+
+Routing
+
+Assign ip address to ports
+
+R1
+int s0/1/0
+ip add 5.5.5.1 255.255.255.252
+no shutdown
+int s0/1/1
+ip add 4.4.4.1 255.255.255.252
+no shutdown
+int g0/0/0
+ip add 1.1.1.1 255.255.255.252
+no shutdown
+int g0/0/1
+ip add 2.2.2.1 255.255.255.252
+no shutdown
+int g0/0/2
+ip add 209.165.200.1 255.255.255.0
+no shutdown
+
+R5
+int s0/1/0
+ip add 6.6.6.1 255.255.255.252
+no shutdown
+int s0/1/1
+ip add 4.4.4.2 255.255.255.252
+no shutdown
+int g0/0/0
+ip add 192.168.1.1 255.255.255.0
+no shutdown
+
+R4
+int s0/1/0
+ip add 5.5.5.2 255.255.255.252
+no shutdown
+int s0/1/1
+ip add 6.6.6.2 255.255.255.252
+no shutdown
+int g0/0/0
+ip add 192.168.1.3 255.255.255.0
+no shutdown
+
+
+R2
+int g0/0/0
+ip add 1.1.1.2 255.255.255.252
+no shutdown
+int g0/0/2
+ip add 3.3.3.1 255.255.255.252
+no shutdown
+
+int g0/0/1   using inter vlan routing(ROS)
+no shutdown
+int g0/0/1.10
+encapsulation dot1q 10
+ip add 192.168.10.1 255.255.255.0
+
+int g0/0/1.20
+encapsulation dot1q 20
+ip add 192.168.20.1 255.255.255.0
+
+
+int g0/0/1.30
+encapsulation dot1q 30
+ip add 192.168.30.1 255.255.255.0
+
+
+R3
+
+int g0/0/1
+ip add 2.2.2.2 255.255.255.252
+no shutdown
+int g0/0/2
+ip add 3.3.3.2 255.255.255.252
+no shutdown
+
+int g0/0/0        using inter vlan routing(ROS)
+no shutdown
+int g0/0/0.10
+encapsulation dot1q 10
+ip add 172.16.10.1 255.255.255.0
+
+int g0/0/0.20
+encapsulation dot1q 20
+ip add 172.16.20.1 255.255.255.0
+int g0/0/0.30
+encapsulation dot1q 30
+ip add 172.16.30.1 255.255.255.0
+
+
+R2
+Create DHCP
+
+ip dhcp excluded-address 192.168.10.1 192.168.10.5
+ip dhcp excluded-address 192.168.20.1 192.168.20.5
+ip dhcp excluded-address 192.168.30.1 192.168.30.5
+
+ip dhcp pool LAN10
+network 192.168.10.0 255.255.255.0
+default-router 192.168.10.1
+dns-server 8.8.8.8
+
+ip dhcp pool LAN20
+network 192.168.20.0 255.255.255.0
+default-router 192.168.20.1
+dns-server 8.8.8.8
+
+
+ip dhcp pool LAN30
+network 192.168.30.0 255.255.255.0
+default-router 192.168.30.1
+dns-server 8.8.8.8
+
+
+
+R3
+Create DHCP
+
+ip dhcp excluded-address 172.16.10.1 172.16.10.5
+ip dhcp excluded-address 172.16.20.1 172.16.20.5
+ip dhcp excluded-address 172.16.30.1 172.16.30.5
+
+ip dhcp pool VLAN10
+network 172.16.10.0 255.255.255.0
+default-router 172.16.10.1
+dns-server 8.8.8.8
+
+ip dhcp pool VLAN20
+network 172.16.20.0 255.255.255.0
+default-router 172.16.20.1
+dns-server 8.8.8.8
+
+
+ip dhcp pool VLAN30
+network 172.16.30.0 255.255.255.0
+default-router 172.16.30.1
+dns-server 8.8.8.8
+
+
+
+Create OSPF 
+R1
+router ospf 1
+network 1.1.1.0 0.0.0.3 area 0
+network 2.2.2.0 0.0.0.3 area 0
+network 4.4.4.0 0.0.0.3 area 0
+network 5.5.5.0 0.0.0.3 area 0
+default-information originate
+exit
+ip route 0.0.0.0 0.0.0.0 g0/0/2
+
+
+
+R2
+router ospf 1
+network 1.1.1.0 0.0.0.3 area 0
+network 3.3.3.0 0.0.0.3 area 0
+network 192.168.10.0 0.0.0.255 area 0
+network 192.168.20.0 0.0.0.255 area 0
+network 192.168.30.0 0.0.0.255 area 0
+
+
+R3
+router ospf 1
+network 2.2.2.0 0.0.0.3 area 0
+network 3.3.3.0 0.0.0.3 area 0
+network 172.16.10.0 0.0.0.255 area 0
+network 172.16.20.0 0.0.0.255 area 0
+network 172.16.30.0 0.0.0.255 area 0
+
+R4
+router ospf 1
+network 5.5.5.0 0.0.0.3 area 0
+network 6.6.6.0 0.0.0.3 area 0
+network 192.168.1.0 0.0.0.255 area 0
+
+R5
+router ospf 1
+network 4.4.4.0 0.0.0.3 area 0
+network 6.6.6.0 0.0.0.3 area 0
+network 192.168.1.0 0.0.0.255 area 0
+
+
+Create NAT  
+ R1  Using PAT
+access-list 1 permit 192.168.0.0 0.0.255.255
+access-list 1 permit 172.16.0.0 0.0.255.255
+ip nat inside source list 1 interface g0/0/2
+int g0/0/2
+ip nat out
+int s0/1/0
+ip nat in
+int s0/1/1
+ip nat in
+int range g0/0/0-1
+ip nat in
+
+
+Create HSRP
+R4
+int g0/0/0
+standby version 2
+standby 1 ip 192.168.1.254
+standby 1 priority 255
+standby 1 preempt 
+
+
+R5
+int g0/0/0
+standby version 2
+standby 1 ip 192.168.1.254
+
+
+
+
+Create ACL
+
+R2  using extended Number ACL
+deny vlan 10 connect to http,https
+deny vlan 20 connect to ftp
+deny vlan 30 connect to icmp
+
+access-list 100 deny tcp 192.168.10.0 0.0.0.255 host 209.165.200.100 eq 80
+access-list 100 deny tcp 192.168.10.0 0.0.0.255 host 209.165.200.100 eq 443
+access-list 100 deny tcp 192.168.20.0 0.0.0.255 host 209.165.200.100 eq ftp
+access-list 100 deny icmp 192.168.30.0 0.0.0.255 host 209.165.200.100
+access-list 100 permit ip any any
+
+
+int g0/0/1.10
+ip access-group 100 in
+int g0/0/1.20
+ip access-group 100 in
+int g0/0/1.30
+ip access-group 100 in
+
+
+Create Basic configuration
+On R1,2,3,4,5
+
+hostname R1 , R2 ,R3 ,R4, R5
+banner motd "Hello"
+username admin sec 123
+enable pass 123
+ip domain-name cisco.com
+crypto key generate rsa
+2048
+ip ssh version 2
+ip ssh authentication-ret 3
+ip ssh time-out 20
+service password-encryption
+line console 0
+login local
+line vty 0 4
+transport input ssh
+login local
+
+

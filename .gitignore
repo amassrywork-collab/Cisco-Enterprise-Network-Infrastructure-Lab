@@ -1,0 +1,13 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Local simulator backups and temporary files
+*.pkt.bak
+*.pkt~
+*.tmp
+scratch/
